@@ -36,6 +36,15 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use(express.json());
 app.use(logger);
 
+// Route Halaman Utama (Root) agar tidak blank saat dibuka di Vercel
+app.get('/', (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'API Todo List Management is running successfully!',
+    documentation: '/api-docs'
+  });
+});
+
 // Route Dokumentasi Swagger (Akses di browser: http://localhost:5000/api-docs)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
