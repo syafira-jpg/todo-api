@@ -15,7 +15,25 @@ const verifyApiKey = (req, res, next) => {
   next();
 };
 
-// Endpoint Statistik yang dilindungi API Key
+/**
+ * @swagger
+ * /api/stats/summary:
+ *   get:
+ *     summary: Get summary statistics (Protected by API Key)
+ *     tags: [Stats]
+ *     parameters:
+ *       - in: header
+ *         name: x-api-key
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: API Key untuk akses eksternal
+ *     responses:
+ *       200:
+ *         description: Statistik berhasil diambil
+ *       401:
+ *         description: Unauthorized / API Key salah atau tidak ada
+ */
 router.get('/summary', verifyApiKey, (req, res) => {
   res.status(200).json({
     status: 'success',
