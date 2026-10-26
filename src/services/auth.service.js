@@ -3,7 +3,7 @@ const User = require('../models/user.model');
 const AppError = require('../utils/appError');
 
 const register = async (userData) => {
-  // Mendukung 'username' dari Swagger maupun 'name' jika ada
+  // Ambil username dari Swagger atau name jika ada
   const username = userData.username || userData.name;
   const { email, password } = userData;
 
@@ -17,8 +17,12 @@ const register = async (userData) => {
     throw new AppError('Email sudah terdaftar! Silakan gunakan email lain.', 400);
   }
 
-  // Buat user baru
-  const user = await User.create({ username, email, password });
+  // Buat user baru (petakan 'username' ke field 'name' di model database)
+  const user = await User.create({
+    name: username,
+    email,
+    password,
+  });
 
   return user;
 };
