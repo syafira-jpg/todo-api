@@ -3,7 +3,13 @@ const User = require('../models/user.model');
 const AppError = require('../utils/appError');
 
 const register = async (userData) => {
-  const { name, email, password } = userData;
+  // Mendukung 'username' dari Swagger maupun 'name' jika ada
+  const username = userData.username || userData.name;
+  const { email, password } = userData;
+
+  if (!username) {
+    throw new AppError('Username wajib diisi!', 400);
+  }
 
   // Cek apakah user sudah terdaftar
   const existingUser = await User.findOne({ email });
@@ -12,7 +18,7 @@ const register = async (userData) => {
   }
 
   // Buat user baru
-  const user = await User.create({ name, email, password });
+  const user = await User.create({ username, email, password });
 
   return user;
 };
