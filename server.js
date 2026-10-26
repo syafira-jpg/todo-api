@@ -37,8 +37,15 @@ const swaggerOptions = {
       },
     ],
   },
-  // Menggunakan path string biasa agar aman di Vercel
-  apis: ['./src/routes/*.js', './server.js'],
+  // Daftarkan path file route secara eksplisit agar aman di Vercel
+  apis: [
+    './src/routes/auth.routes.js',
+    './src/routes/todo.routes.js',
+    './src/routes/category.routes.js',
+    './src/routes/stats.routes.js',
+    './src/routes/activityLog.routes.js',
+    './server.js'
+  ],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
