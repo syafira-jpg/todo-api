@@ -1,16 +1,39 @@
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
-  try {
-    // Mendukung MONGODB_URI atau MONGO_URI, plus fallback ke string lokal/hardcode
-    const DB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+srv://syafirakhanzah_db_user:020709@gamelab-mongodb.ebhcyyu.mongodb.net/db_gamelab_indonesia?appName=gamelab-mongodb';
+// Cache koneksi untuk environment serverless (Vercel)
+let cached = global.mongoose;
 
-    const conn = await mongoose.connect(DB_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+const connectDB = async () => {
+  if (cached.conn) {
+    return cached.conn;
   }
+
+  if (!cached.promise) {
+    const DB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+srv://syafirakhanzah_db_user:020709@gamelab-mongodb.ebhcyyu.mongodb.net/db_gamelab_indonesia?appName=gamelab-mongodb';
+    
+    const opts = {
+      bufferCommands: false,
+    };
+
+    cached.promise = mongoose.connect(DB_URI, opts).then((mongoose) => {
+      console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+      return mongoose;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (error) {
+    cached.promise = null;
+    console.error(`Error connecting to MongoDB: ${error.message}`);
+    throw error;
+  }
+
+  return cached.conn;
 };
 
 module.exports = connectDB;
