@@ -1,5 +1,6 @@
 const express = require('express');
 const todoController = require('../controllers/todo.controller');
+const authMiddleware = require('../middlewares/auth.middleware'); // Pastikan auth middleware diikutsertakan jika dibutuhkan
 
 const router = express.Router();
 
@@ -9,6 +10,8 @@ const router = express.Router();
  *   get:
  *     summary: Get all todos for the logged-in user
  *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of todos retrieved successfully
@@ -17,6 +20,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new todo item
  *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -36,7 +41,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.get('/', todoController.getAllTodos);
+router.get('/', todoController.getTodos);
 router.post('/', todoController.createTodo);
 
 /**
@@ -45,6 +50,8 @@ router.post('/', todoController.createTodo);
  *   put:
  *     summary: Update an existing todo by ID
  *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -70,6 +77,8 @@ router.post('/', todoController.createTodo);
  *   delete:
  *     summary: Delete a todo by ID
  *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
