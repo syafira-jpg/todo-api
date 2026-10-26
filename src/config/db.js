@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Cache koneksi untuk environment serverless (Vercel)
 let cached = global.mongoose;
 
 if (!cached) {
@@ -16,7 +15,7 @@ const connectDB = async () => {
     const DB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+srv://syafirakhanzah_db_user:020709@gamelab-mongodb.ebhcyyu.mongodb.net/db_gamelab_indonesia?appName=gamelab-mongodb';
     
     const opts = {
-      bufferCommands: false,
+      bufferCommands: true,
     };
 
     cached.promise = mongoose.connect(DB_URI, opts).then((mongoose) => {
