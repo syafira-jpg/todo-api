@@ -4,9 +4,9 @@ const { body, validationResult } = require('express-validator');
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // LANGSUNG SEND RESPON ERROR DI SINI
-    return res.status(400).send({
-      success: false,
+    // Menggunakan standar JSend (status: 'fail')
+    return res.status(400).json({
+      status: 'fail',
       message: 'Validasi gagal',
       errors: errors.array().map((err) => ({
         field: err.path,

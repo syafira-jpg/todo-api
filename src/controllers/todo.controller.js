@@ -5,12 +5,12 @@ const getTodos = async (req, res) => {
   try {
     const result = await todoService.getAllTodos(req.query);
     res.status(200).json({
-      success: true,
+      status: 'success',
       data: result.todos,
       pagination: result.pagination,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ status: 'fail', message: error.message });
   }
 };
 
@@ -24,9 +24,9 @@ const createTodo = async (req, res) => {
     };
 
     const todo = await todoService.createTodo(todoData, userId);
-    res.status(201).json({ success: true, data: todo });
+    res.status(201).json({ status: 'success', data: todo });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ status: 'fail', message: error.message });
   }
 };
 
@@ -35,11 +35,11 @@ const getTodoById = async (req, res) => {
   try {
     const todo = await todoService.getTodoById(req.params.id);
     if (!todo) {
-      return res.status(404).json({ success: false, message: 'Todo tidak ditemukan' });
+      return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
-    res.status(200).json({ success: true, data: todo });
+    res.status(200).json({ status: 'success', data: todo });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ status: 'fail', message: error.message });
   }
 };
 
@@ -48,11 +48,11 @@ const updateTodo = async (req, res) => {
   try {
     const todo = await todoService.updateTodo(req.params.id, req.body);
     if (!todo) {
-      return res.status(404).json({ success: false, message: 'Todo tidak ditemukan' });
+      return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
-    res.status(200).json({ success: true, data: todo });
+    res.status(200).json({ status: 'success', data: todo });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ status: 'fail', message: error.message });
   }
 };
 
@@ -61,11 +61,11 @@ const deleteTodo = async (req, res) => {
   try {
     const todo = await todoService.deleteTodo(req.params.id);
     if (!todo) {
-      return res.status(404).json({ success: false, message: 'Todo tidak ditemukan' });
+      return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
-    res.status(200).json({ success: true, message: 'Todo berhasil dihapus' });
+    res.status(200).json({ status: 'success', message: 'Todo berhasil dihapus' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ status: 'fail', message: error.message });
   }
 };
 

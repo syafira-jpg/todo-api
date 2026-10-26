@@ -16,20 +16,28 @@ const recordActivity = async (userId, action, description) => {
   }
 };
 
-// Mengambil semua todo dengan Filtering, Search, Sorting, & Pagination
-const getAllTodos = async (queryParams = {}) => {
-  const { search, completed, sortBy, order, page = 1, limit = 10 } = queryParams;
+// Mengambil semua todo milik user dengan Filtering, Search, Sorting, & Pagination
+const getAllTodos = async (userId, queryParams = {}) => {
+  const { search, completed, isCompleted, sortBy, order, page = 1, limit = 10 } = queryParams;
 
+  // Filter berdasarkan user yang sedang login
   let query = {};
+  if (userId) {
+    query.user = userId;
+  }
 
+  // Filter pencarian berdasarkan judul
   if (search) {
     query.title = { $regex: search, $options: 'i' };
   }
 
-  if (completed !== undefined) {
-    query.completed = completed === 'true';
+  // Filter status selesai (memeriksa parameter completed atau isCompleted)
+  const statusFilter = completed !== undefined ? completed : isCompleted;
+  if (statusFilter !== undefined) {
+    query.isCompleted = statusFilter === 'true' || statusFilter === true;
   }
 
+  // Sorting
   let sortOption = {};
   if (sortBy) {
     sortOption[sortBy] = order === 'desc' ? -1 : 1;
@@ -37,12 +45,14 @@ const getAllTodos = async (queryParams = {}) => {
     sortOption.createdAt = -1;
   }
 
+  // Pagination
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 10;
   const skip = (pageNum - 1) * limitNum;
 
   const todos = await Todo.find(query)
     .populate('user', 'name email')
+    .populate('category', 'name')
     .sort(sortOption)
     .skip(skip)
     .limit(limitNum);
@@ -75,7 +85,9 @@ const createTodo = async (data, userId) => {
 
 // Mengambil todo berdasarkan ID
 const getTodoById = async (id) => {
-  return await Todo.findById(id).populate('user', 'name email');
+  return await Todo.findById(id)
+    .populate('user', 'name email')
+    .populate('category', 'name');
 };
 
 // Memperbarui todo berdasarkan ID + Catat Log

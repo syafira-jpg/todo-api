@@ -1,38 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const categoryController = require('../controllers/category.controller');
+const authMiddleware = require('../middlewares/auth.middleware');
 
-// Contoh endpoint Kategori (GET, POST, PUT, DELETE)
-router.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Get all categories endpoint',
-    data: []
-  });
-});
+// Lindungi semua route kategori dengan auth middleware (wajib login)
+router.use(authMiddleware);
 
-router.post('/', (req, res) => {
-  const { name } = req.body;
-  res.status(201).json({
-    status: 'success',
-    message: 'Category created successfully',
-    data: { name }
-  });
-});
-
-router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  res.status(200).json({
-    status: 'success',
-    message: `Category with id ${id} updated successfully`
-  });
-});
-
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  res.status(200).json({
-    status: 'success',
-    message: `Category with id ${id} deleted successfully`
-  });
-});
+router.get('/', categoryController.getCategories);
+router.post('/', categoryController.createCategory);
+router.put('/:id', categoryController.updateCategory);
+router.delete('/:id', categoryController.deleteCategory);
 
 module.exports = router;
