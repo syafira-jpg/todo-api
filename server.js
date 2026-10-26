@@ -1,5 +1,4 @@
 const express = require('express');
-const path = require('path');
 const connectDB = require('./src/config/db');
 const todoRoutes = require('./src/routes/todo.routes');
 const authRoutes = require('./src/routes/auth.routes');
@@ -38,11 +37,8 @@ const swaggerOptions = {
       },
     ],
   },
-  // Menggunakan path.join dan __dirname agar lokasi file terbaca secara mutlak di Vercel
-  apis: [
-    path.join(__dirname, './src/routes/*.js'),
-    path.join(__dirname, './server.js'),
-  ],
+  // Menggunakan path string biasa agar aman di Vercel
+  apis: ['./src/routes/*.js', './server.js'],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
