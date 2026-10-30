@@ -1,13 +1,33 @@
 const todoService = require('../services/todo.service');
 
-// Controller untuk mengambil semua data (dengan Query Params)
+// Controller untuk mengambil semua data (dengan Query Params yang bersih)
 const getTodos = async (req, res) => {
   try {
-    const result = await todoService.getAllTodos(req.query);
+    // Ambil ID user dari token (mendukung req.user.id atau req.user._id)
+    const userId = req.user._id || req.user.id;
+
+    // Pisahkan query filtering agar tidak tercampur dengan query mentah
+    const filter = { user: userId, archived: false };
+    if (req.query.search) {
+      filter.title = { $regex: req.query.search, $options: 'i' };
+    }
+    if (req.query.completed !== undefined) {
+      filter.completed = req.query.completed === 'true';
+    }
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const todos = await todoService.getAllTodosFiltered(filter, skip, limit);
+    
     res.status(200).json({
       status: 'success',
-      data: result.todos,
-      pagination: result.pagination,
+      results: todos.length,
+      data: todos,
     });
   } catch (error) {
     res.status(500).json({ status: 'fail', message: error.message });
@@ -17,13 +37,18 @@ const getTodos = async (req, res) => {
 // Controller untuk membuat data baru
 const createTodo = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user ? (req.user._id || req.user.id) : null;
+    if (!userId) {
+      return res.status(401).json({ status: 'fail', message: 'Unauthorized, user ID tidak ditemukan' });
+    }
+
     const todoData = {
       ...req.body,
       user: userId,
+      created_by: userId, // Menyesuaikan field wajib dokumen dari mentor
     };
 
-    const todo = await todoService.createTodo(todoData, userId);
+    const todo = await todoService.createTodo(todoData);
     res.status(201).json({ status: 'success', data: todo });
   } catch (error) {
     res.status(400).json({ status: 'fail', message: error.message });
@@ -46,7 +71,13 @@ const getTodoById = async (req, res) => {
 // Controller untuk memperbarui data
 const updateTodo = async (req, res) => {
   try {
-    const todo = await todoService.updateTodo(req.params.id, req.body);
+    const userId = req.user ? (req.user._id || req.user.id) : null;
+    const updateData = {
+      ...req.body,
+      updated_by: userId,
+    };
+
+    const todo = await todoService.updateTodo(req.params.id, updateData);
     if (!todo) {
       return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }

@@ -17,7 +17,10 @@ const protect = catchAsync(async (req, res, next) => {
     return next(new AppError('Anda belum login! Silakan login untuk mendapatkan akses.', 401));
   }
 
-  const decoded = jwt.verify(token, 'rahasia_super_aman_gamelab');
+  // Gunakan process.env.JWT_SECRET agar sinkron dengan proses login
+  const secretKey = process.env.JWT_SECRET || 'rahasia_super_aman_gamelab';
+  
+  const decoded = jwt.verify(token, secretKey);
   const userId = decoded.id || decoded._id;
 
   const currentUser = await User.findById(userId);
