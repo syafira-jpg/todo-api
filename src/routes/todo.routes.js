@@ -1,8 +1,7 @@
 const express = require('express');
-const todoController = require('../controllers/todo.controller');
-const authMiddleware = require('../middlewares/auth.middleware'); // Pastikan auth middleware diikutsertakan jika dibutuhkan
-
 const router = express.Router();
+const todoController = require('../controllers/todo.controller');
+const authMiddleware = require('../middlewares/auth.middleware');
 
 /**
  * @swagger
@@ -41,12 +40,28 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.get('/', todoController.getTodos);
-router.post('/', todoController.createTodo);
+router.get('/', authMiddleware, todoController.getTodos);
+router.post('/', authMiddleware, todoController.createTodo);
 
 /**
  * @swagger
  * /api/todos/{id}:
+ *   get:
+ *     summary: Get a todo by ID
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Todo details retrieved successfully
+ *       404:
+ *         description: Todo not found
  *   put:
  *     summary: Update an existing todo by ID
  *     tags: [Todos]
@@ -91,7 +106,8 @@ router.post('/', todoController.createTodo);
  *       404:
  *         description: Todo not found
  */
-router.put('/:id', todoController.updateTodo);
-router.delete('/:id', todoController.deleteTodo);
+router.get('/:id', authMiddleware, todoController.getTodoById);
+router.put('/:id', authMiddleware, todoController.updateTodo);
+router.delete('/:id', authMiddleware, todoController.deleteTodo);
 
 module.exports = router;
