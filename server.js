@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const connectDB = require('./src/config/db');
 const todoRoutes = require('./src/routes/todo.routes');
 const authRoutes = require('./src/routes/auth.routes');
@@ -7,17 +8,16 @@ const statsRoutes = require('./src/routes/stats.routes');
 const activityLogRoutes = require('./src/routes/activityLog.routes');
 const { logger, notFound, globalErrorHandler } = require('./src/middlewares/error.middleware');
 
-// Tambahan Modul Swagger untuk Dokumentasi API
+// Modul Swagger untuk Dokumentasi API
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const app = express();
 
-// PANGGIL KONEKSI DATABASE DI LUAR
-// (Supaya Vercel Serverless Function selalu terhubung ke MongoDB Atlas)
+// PANGGIL KONEKSI DATABASE
 connectDB();
 
-// Konfigurasi Swagger UI
+// Konfigurasi Swagger UI menggunakan path absolut agar aman di Vercel
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -37,14 +37,12 @@ const swaggerOptions = {
       },
     ],
   },
-  // Daftarkan path file route secara eksplisit agar aman di Vercel
   apis: [
-    './src/routes/auth.routes.js',
-    './src/routes/todo.routes.js',
-    './src/routes/category.routes.js',
-    './src/routes/stats.routes.js',
-    './src/routes/activityLog.routes.js',
-    './server.js'
+    path.join(__dirname, './src/routes/auth.routes.js'),
+    path.join(__dirname, './src/routes/todo.routes.js'),
+    path.join(__dirname, './src/routes/category.routes.js'),
+    path.join(__dirname, './src/routes/stats.routes.js'),
+    path.join(__dirname, './src/routes/activityLog.routes.js'),
   ],
 };
 
@@ -63,7 +61,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Route Dokumentasi Swagger menggunakan CDN agar TIDAK BLANK/PUTIH di Vercel
+// Route Dokumentasi Swagger menggunakan CDN agar tidak blank/putih di Vercel
 app.use(
   '/api-docs',
   swaggerUi.serve,
@@ -87,7 +85,7 @@ app.use('/api/activity-logs', activityLogRoutes);
 app.use(notFound);
 app.use(globalErrorHandler);
 
-// Hanya jalankan listener PORT jika dijalankan secara lokal (node server.js)
+// Jalankan listener PORT jika secara lokal
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
