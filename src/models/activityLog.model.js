@@ -9,11 +9,15 @@ const activityLogSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: ['CREATE', 'UPDATE', 'DELETE'],
+    enum: ['CREATE_TODO', 'UPDATE_TODO', 'DELETE_TODO', 'CREATE', 'UPDATE', 'DELETE'],
+  },
+  snapshot: {
+    type: mongoose.Schema.Types.Mixed, // Memungkinkan menyimpan objek data todo secara utuh (flexible)
+    required: false,
   },
   description: {
     type: String,
-    required: true,
+    required: false, // Dibuat opsional karena kita menggunakan snapshot
   },
 }, {
   timestamps: true,

@@ -2,13 +2,14 @@ const Todo = require('../models/todo.model');
 const ActivityLog = require('../models/activityLog.model');
 
 // Fungsi helper untuk mencatat log aktivitas
-const recordActivity = async (userId, action, description) => {
+const recordActivity = async (userId, action, description, snapshot = null) => {
   try {
     if (userId) {
       await ActivityLog.create({
         user: userId,
         action,
         description,
+        snapshot,
       });
     }
   } catch (error) {
@@ -31,10 +32,10 @@ const getAllTodos = async (userId, queryParams = {}) => {
     query.title = { $regex: search, $options: 'i' };
   }
 
-  // Filter status selesai (memeriksa parameter completed atau isCompleted)
+  // Filter status selesai (memeriksa parameter completed atau isCompleted, diselaraskan ke field 'completed')
   const statusFilter = completed !== undefined ? completed : isCompleted;
   if (statusFilter !== undefined) {
-    query.isCompleted = statusFilter === 'true' || statusFilter === true;
+    query.completed = statusFilter === 'true' || statusFilter === true;
   }
 
   // Sorting
@@ -77,8 +78,19 @@ const createTodo = async (data, userId) => {
   }
   const newTodo = await Todo.create(data);
   
-  // Catat Activity Log
-  await recordActivity(data.user || userId, 'CREATE', `Membuat todo baru: "${newTodo.title}"`);
+  // Catat Activity Log dengan Snapshot
+  await recordActivity(
+    data.user || userId, 
+    'CREATE_TODO', 
+    `Membuat todo baru: "${newTodo.title}"`,
+    {
+      id: newTodo._id,
+      title: newTodo.title,
+      description: newTodo.description,
+      completed: newTodo.completed,
+      category: newTodo.category
+    }
+  );
 
   return newTodo;
 };
@@ -95,8 +107,19 @@ const updateTodo = async (id, data) => {
   const updatedTodo = await Todo.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   
   if (updatedTodo) {
-    // Catat Activity Log
-    await recordActivity(updatedTodo.user, 'UPDATE', `Memperbarui todo: "${updatedTodo.title}"`);
+    // Catat Activity Log dengan Snapshot
+    await recordActivity(
+      updatedTodo.user, 
+      'UPDATE_TODO', 
+      `Memperbarui todo: "${updatedTodo.title}"`,
+      {
+        id: updatedTodo._id,
+        title: updatedTodo.title,
+        description: updatedTodo.description,
+        completed: updatedTodo.completed,
+        category: updatedTodo.category
+      }
+    );
   }
 
   return updatedTodo;
@@ -104,11 +127,25 @@ const updateTodo = async (id, data) => {
 
 // Menghapus todo berdasarkan ID + Catat Log
 const deleteTodo = async (id) => {
+  // Ambil data dulu untuk snapshot sebelum dihapus
+  const todoBeforeDelete = await Todo.findById(id);
+
   const deletedTodo = await Todo.findByIdAndDelete(id);
   
   if (deletedTodo) {
-    // Catat Activity Log
-    await recordActivity(deletedTodo.user, 'DELETE', `Menghapus todo: "${deletedTodo.title}"`);
+    // Catat Activity Log dengan Snapshot
+    await recordActivity(
+      deletedTodo.user, 
+      'DELETE_TODO', 
+      `Menghapus todo: "${deletedTodo.title}"`,
+      todoBeforeDelete ? {
+        id: todoBeforeDelete._id,
+        title: todoBeforeDelete.title,
+        description: todoBeforeDelete.description,
+        completed: todoBeforeDelete.completed,
+        category: todoBeforeDelete.category
+      } : { id }
+    );
   }
 
   return deletedTodo;
@@ -120,4 +157,5 @@ module.exports = {
   getTodoById,
   updateTodo,
   deleteTodo,
+  recordActivity,
 };

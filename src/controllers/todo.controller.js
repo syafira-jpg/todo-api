@@ -1,13 +1,11 @@
 const todoService = require('../services/todo.service');
-const ActivityLog = require('../models/activityLog.model'); // Impor model ActivityLog
+const ActivityLog = require('../models/activityLog.model');
 
 // Controller untuk mengambil semua data (dengan Query Params yang bersih)
 const getTodos = async (req, res) => {
   try {
-    // Ambil ID user dari token (mendukung req.user.id atau req.user._id)
     const userId = req.user._id || req.user.id;
 
-    // Pisahkan query filtering agar tidak tercampur dengan query mentah
     const filter = { user: userId, archived: false };
     if (req.query.search) {
       filter.title = { $regex: req.query.search, $options: 'i' };
@@ -35,7 +33,7 @@ const getTodos = async (req, res) => {
   }
 };
 
-// Controller untuk membuat data baru
+// Controller untuk membuat data baru (Dengan Snapshot Activity Log)
 const createTodo = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id) : null;
@@ -46,24 +44,24 @@ const createTodo = async (req, res) => {
     const todoData = {
       ...req.body,
       user: userId,
-      created_by: userId, // Menyesuaikan field wajib dokumen dari mentor
+      created_by: userId,
     };
 
     const todo = await todoService.createTodo(todoData);
 
-    // --- PENCATATAN ACTIVITY LOG (CREATE) ---
+    // --- PENCATATAN ACTIVITY LOG (SNAPSHOT) ---
     await ActivityLog.create({
       user: userId,
-      user_id: userId,
       action: 'CREATE_TODO',
-      todo_id: todo._id,
       snapshot: {
+        id: todo._id,
         title: todo.title,
         description: todo.description,
         completed: todo.completed,
         category: todo.category
       }
     });
+    // ----------------------------------------
 
     res.status(201).json({ status: 'success', data: todo });
   } catch (error) {
@@ -84,7 +82,7 @@ const getTodoById = async (req, res) => {
   }
 };
 
-// Controller untuk memperbarui data
+// Controller untuk memperbarui data (Dengan Snapshot Activity Log)
 const updateTodo = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id) : null;
@@ -98,19 +96,19 @@ const updateTodo = async (req, res) => {
       return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
 
-    // --- PENCATATAN ACTIVITY LOG (UPDATE) ---
+    // --- PENCATATAN ACTIVITY LOG (SNAPSHOT) ---
     await ActivityLog.create({
       user: userId,
-      user_id: userId,
       action: 'UPDATE_TODO',
-      todo_id: todo._id,
       snapshot: {
+        id: todo._id,
         title: todo.title,
         description: todo.description,
         completed: todo.completed,
         category: todo.category
       }
     });
+    // ----------------------------------------
 
     res.status(200).json({ status: 'success', data: todo });
   } catch (error) {
@@ -118,12 +116,12 @@ const updateTodo = async (req, res) => {
   }
 };
 
-// Controller untuk menghapus data
+// Controller untuk menghapus data (Dengan Snapshot Activity Log)
 const deleteTodo = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id) : null;
     
-    // Ambil data todo terlebih dahulu untuk diambil snapshot-nya sebelum dihapus
+    // Ambil data dulu untuk snapshot sebelum dihapus
     const todoBeforeDelete = await todoService.getTodoById(req.params.id);
 
     const todo = await todoService.deleteTodo(req.params.id);
@@ -131,18 +129,19 @@ const deleteTodo = async (req, res) => {
       return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
 
-    // --- PENCATATAN ACTIVITY LOG (DELETE) DENGAN SNAPSHOT ---
+    // --- PENCATATAN ACTIVITY LOG (SNAPSHOT) ---
     await ActivityLog.create({
       user: userId,
-      user_id: userId,
       action: 'DELETE_TODO',
-      todo_id: req.params.id,
       snapshot: todoBeforeDelete ? {
+        id: todoBeforeDelete._id,
         title: todoBeforeDelete.title,
         description: todoBeforeDelete.description,
-        completed: todoBeforeDelete.completed
-      } : {}
+        completed: todoBeforeDelete.completed,
+        category: todoBeforeDelete.category
+      } : { id: req.params.id }
     });
+    // ----------------------------------------
 
     res.status(200).json({ status: 'success', message: 'Todo berhasil dihapus' });
   } catch (error) {
