@@ -8,16 +8,13 @@ const statsRoutes = require('./src/routes/stats.routes');
 const activityLogRoutes = require('./src/routes/activityLog.routes');
 const { logger, notFound, globalErrorHandler } = require('./src/middlewares/error.middleware');
 
-// Modul Swagger untuk Dokumentasi API
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const app = express();
 
-// PANGGIL KONEKSI DATABASE
 connectDB();
 
-// Konfigurasi Swagger UI menggunakan path absolut agar aman di Vercel
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -38,21 +35,19 @@ const swaggerOptions = {
     ],
   },
   apis: [
-    path.join(__dirname, './src/routes/auth.routes.js'),
-    path.join(__dirname, './src/routes/todo.routes.js'),
-    path.join(__dirname, './src/routes/category.routes.js'),
-    path.join(__dirname, './src/routes/stats.routes.js'),
-    path.join(__dirname, './src/routes/activityLog.routes.js'),
+    path.join(__dirname, 'src', 'routes', 'auth.routes.js'),
+    path.join(__dirname, 'src', 'routes', 'todo.routes.js'),
+    path.join(__dirname, 'src', 'routes', 'category.routes.js'),
+    path.join(__dirname, 'src', 'routes', 'stats.routes.js'),
+    path.join(__dirname, 'src', 'routes', 'activityLog.routes.js'),
   ],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
-// Middlewares Utama
 app.use(express.json());
 app.use(logger);
 
-// Route Halaman Utama (Root)
 app.get('/', (req, res) => {
   res.json({
     status: 'success',
@@ -61,7 +56,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Route Dokumentasi Swagger menggunakan CDN agar tidak blank/putih di Vercel
 app.use(
   '/api-docs',
   swaggerUi.serve,
@@ -74,23 +68,19 @@ app.use(
   })
 );
 
-// Routes API Utama
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
 
-// Error Handling
 app.use(notFound);
 app.use(globalErrorHandler);
 
-// Jalankan listener PORT jika secara lokal
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`Server berjalan di http://localhost:${PORT}`);
-    console.log(`Dokumentasi Swagger dapat diakses di http://localhost:${PORT}/api-docs`);
   });
 }
 
