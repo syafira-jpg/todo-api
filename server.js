@@ -34,13 +34,7 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: [
-    path.join(__dirname, 'src', 'routes', 'auth.routes.js'),
-    path.join(__dirname, 'src', 'routes', 'todo.routes.js'),
-    path.join(__dirname, 'src', 'routes', 'category.routes.js'),
-    path.join(__dirname, 'src', 'routes', 'stats.routes.js'),
-    path.join(__dirname, 'src', 'routes', 'activityLog.routes.js'),
-  ],
+  apis: ['./src/routes/*.js'],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
