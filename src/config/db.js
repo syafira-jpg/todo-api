@@ -35,4 +35,4 @@ const connectDB = async () => {
   return cached.conn;
 };
 
-module.exports = connectDB;
+module.exports = connectDB;  
