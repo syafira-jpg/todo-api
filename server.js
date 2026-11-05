@@ -33,7 +33,6 @@ const swaggerOptions = {
         description: 'Server Lokal',
       },
     ],
-    // Konfigurasi Security Schemes agar tombol Authorize muncul di Swagger
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -64,18 +63,15 @@ app.get('/', (req, res) => {
   });
 });
 
-// Konfigurasi Swagger UI dipisah (serve & setup) agar aman di Vercel Serverless
+// Menggunakan setup Swagger standar yang aman untuk serverless
+app.get('/api-docs', swaggerUi.setup(swaggerDocs, {
+  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css',
+  customJs: [
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js',
+  ],
+}));
 app.use('/api-docs', swaggerUi.serve);
-app.get(
-  '/api-docs',
-  swaggerUi.setup(swaggerDocs, {
-    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css',
-    customJs: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js',
-    ],
-  })
-);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
