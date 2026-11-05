@@ -64,10 +64,10 @@ app.get('/', (req, res) => {
   });
 });
 
-// Konfigurasi Swagger UI dengan CDN dan security schemes
-app.use(
+// Konfigurasi Swagger UI dipisah (serve & setup) agar aman di Vercel Serverless
+app.use('/api-docs', swaggerUi.serve);
+app.get(
   '/api-docs',
-  swaggerUi.serve,
   swaggerUi.setup(swaggerDocs, {
     customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css',
     customJs: [
