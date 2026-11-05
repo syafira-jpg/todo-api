@@ -20,7 +20,14 @@ const protect = catchAsync(async (req, res, next) => {
   // Gunakan process.env.JWT_SECRET agar sinkron dengan proses login
   const secretKey = process.env.JWT_SECRET || 'rahasia_super_aman_gamelab';
   
-  const decoded = jwt.verify(token, secretKey);
+  let decoded;
+  try {
+    decoded = jwt.verify(token, secretKey);
+  } catch (error) {
+    // Jika token malformed atau expired, lempar AppError dengan status 401
+    return next(new AppError('Token tidak valid atau sudah kedaluwarsa!', 401));
+  }
+
   const userId = decoded.id || decoded._id;
 
   const currentUser = await User.findById(userId);

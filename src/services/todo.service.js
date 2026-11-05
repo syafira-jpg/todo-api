@@ -1,5 +1,7 @@
 const Todo = require('../models/todo.model');
+const Category = require('../models/category.model');
 const ActivityLog = require('../models/activityLog.model');
+const AppError = require('../utils/appError');
 
 // Fungsi helper untuk mencatat log aktivitas
 const recordActivity = async (userId, action, description, snapshot = null) => {
@@ -22,7 +24,7 @@ const getAllTodos = async (userId, queryParams = {}) => {
   const { search, completed, isCompleted, sortBy, order, page = 1, limit = 10 } = queryParams;
 
   // Filter berdasarkan user yang sedang login
-  let query = {};
+  let query = { archived: false };
   if (userId) {
     query.user = userId;
   }
@@ -38,36 +40,37 @@ const getAllTodos = async (userId, queryParams = {}) => {
     query.completed = statusFilter === 'true' || statusFilter === true;
   }
 
-  // Sorting
-  let sortOption = {};
-  if (sortBy) {
-    sortOption[sortBy] = order === 'desc' ? -1 : 1;
-  } else {
-    sortOption.createdAt = -1;
+  // Filter kategori jika ada
+  if (queryParams.category) {
+    query.category = queryParams.category;
   }
 
+  // Sorting
+  let sortOption = {};
+  const sortField = ['createdAt', 'updatedAt', 'title', 'priority', 'dueDate'].includes(sortBy) ? sortBy : 'createdAt';
+  const sortOrder = order === 'asc' ? 1 : -1;
+  sortOption[sortField] = sortOrder;
+
   // Pagination
-  const pageNum = parseInt(page, 10) || 1;
-  const limitNum = parseInt(limit, 10) || 10;
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
 
-  const todos = await Todo.find(query)
+  const data = await Todo.find(query)
     .populate('user', 'name email')
     .populate('category', 'name')
     .sort(sortOption)
     .skip(skip)
     .limit(limitNum);
 
-  const totalData = await Todo.countDocuments(query);
+  const total = await Todo.countDocuments(query);
 
   return {
-    todos,
-    pagination: {
-      totalData,
-      totalPages: Math.ceil(totalData / limitNum),
-      currentPage: pageNum,
-      limit: limitNum,
-    },
+    data,
+    total,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
   };
 };
 
@@ -75,7 +78,17 @@ const getAllTodos = async (userId, queryParams = {}) => {
 const createTodo = async (data, userId) => {
   if (typeof data === 'object' && !data.user && userId) {
     data.user = userId;
+    data.created_by = userId;
   }
+
+  // Validasi Category ID: pastikan kategori terdaftar di database
+  if (data.category) {
+    const categoryExists = await Category.findById(data.category);
+    if (!categoryExists) {
+      throw new AppError('Kategori tidak ditemukan atau ID kategori tidak valid!', 400);
+    }
+  }
+
   const newTodo = await Todo.create(data);
   
   // Catat Activity Log dengan Snapshot
@@ -103,7 +116,19 @@ const getTodoById = async (id) => {
 };
 
 // Memperbarui todo berdasarkan ID + Catat Log
-const updateTodo = async (id, data) => {
+const updateTodo = async (id, data, userId = null) => {
+  if (userId) {
+    data.updated_by = userId;
+  }
+
+  // Validasi Category ID jika dikirim saat update
+  if (data.category) {
+    const categoryExists = await Category.findById(data.category);
+    if (!categoryExists) {
+      throw new AppError('Kategori tidak ditemukan atau ID kategori tidak valid!', 400);
+    }
+  }
+
   const updatedTodo = await Todo.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   
   if (updatedTodo) {
@@ -153,6 +178,7 @@ const deleteTodo = async (id) => {
 
 module.exports = {
   getAllTodos,
+  getAllTodosFiltered: getAllTodos,
   createTodo,
   getTodoById,
   updateTodo,

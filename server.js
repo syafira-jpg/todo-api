@@ -33,6 +33,17 @@ const swaggerOptions = {
         description: 'Server Lokal',
       },
     ],
+    // Konfigurasi Security Schemes agar tombol Authorize muncul di Swagger
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Masukkan token JWT kamu di sini (tanpa kata Bearer)',
+        },
+      },
+    },
   },
   apis: [
     path.join(process.cwd(), 'src/routes/*.js'),
@@ -53,6 +64,7 @@ app.get('/', (req, res) => {
   });
 });
 
+// Konfigurasi Swagger UI dengan CDN dan security schemes
 app.use(
   '/api-docs',
   swaggerUi.serve,

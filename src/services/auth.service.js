@@ -24,7 +24,14 @@ const register = async (userData) => {
     password,
   });
 
-  return user;
+  // Buat token JWT saat register berhasil (sama seperti login)
+  const token = jwt.sign(
+    { id: user._id },
+    'rahasia_super_aman_gamelab',
+    { expiresIn: '1d' }
+  );
+
+  return { user, token };
 };
 
 const login = async ({ email, password }) => {
