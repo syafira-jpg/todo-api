@@ -1,20 +1,25 @@
 const express = require('express');
 const path = require('path');
 const connectDB = require('./src/config/db');
+
+// Import Routers
 const todoRoutes = require('./src/routes/todo.routes');
 const authRoutes = require('./src/routes/auth.routes');
 const categoryRoutes = require('./src/routes/category.routes');
 const statsRoutes = require('./src/routes/stats.routes');
 const activityLogRoutes = require('./src/routes/activityLog.routes');
+
+// Import Middlewares
 const { logger, notFound, globalErrorHandler } = require('./src/middlewares/error.middleware');
 
-const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const app = express();
 
+// Connect Database
 connectDB();
 
+// Konfigurasi Swagger Spec
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -55,6 +60,7 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use(express.json());
 app.use(logger);
 
+// Root Endpoint
 app.get('/', (req, res) => {
   res.json({
     status: 'success',
@@ -63,22 +69,62 @@ app.get('/', (req, res) => {
   });
 });
 
-// Setup Swagger yang aman dan tidak memicu error handler di Vercel
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerDocs, {
-  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css',
-  customJs: [
-    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js',
-  ],
-}));
+// Endpoint Swagger JSON Data
+app.get('/api-docs/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocs);
+});
 
+// Halaman Swagger UI (Bebas error argument handler di Vercel & Tombol Authorize Muncul)
+app.get('/api-docs', (req, res) => {
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>API Todos List Management - Swagger UI</title>
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css" />
+      <style>
+        html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+        *, *:before, *:after { box-sizing: inherit; }
+        body { margin:0; background: #fafafa; }
+      </style>
+    </head>
+    <body>
+      <div id="swagger-ui"></div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js"></script>
+      <script>
+        window.onload = function() {
+          window.ui = SwaggerUIBundle({
+            url: "/api-docs/swagger.json",
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+              SwaggerUIBundle.presets.apis,
+              SwaggerUIStandalonePreset
+            ],
+            plugins: [
+              SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: "StandaloneLayout"
+          });
+        };
+      </script>
+    </body>
+    </html>
+  `;
+  res.send(html);
+});
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
 
+// Error Handling Middlewares
 app.use(notFound);
 app.use(globalErrorHandler);
 
