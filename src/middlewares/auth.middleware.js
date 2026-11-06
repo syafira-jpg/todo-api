@@ -24,7 +24,6 @@ const protect = catchAsync(async (req, res, next) => {
   try {
     decoded = jwt.verify(token, secretKey);
   } catch (error) {
-    // Jika token malformed atau expired, lempar AppError dengan status 401
     return next(new AppError('Token tidak valid atau sudah kedaluwarsa!', 401));
   }
 
@@ -39,4 +38,8 @@ const protect = catchAsync(async (req, res, next) => {
   next();
 });
 
-module.exports = protect;
+// Ekspor sebagai objek agar cocok dengan semua pemanggilan "authMiddleware" di routes
+module.exports = {
+  authMiddleware: protect,
+  protect
+};
