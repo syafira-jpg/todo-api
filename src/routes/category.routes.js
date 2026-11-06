@@ -3,9 +3,6 @@ const router = express.Router();
 const categoryController = require('../controllers/category.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
-// Lindungi semua route kategori dengan auth middleware (wajib login)
-router.use(authMiddleware);
-
 /**
  * @swagger
  * /api/categories:
@@ -39,8 +36,8 @@ router.use(authMiddleware);
  *       400:
  *         description: Bad request
  */
-router.get('/', categoryController.getCategories);
-router.post('/', categoryController.createCategory);
+router.get('/', authMiddleware, categoryController.getCategories);
+router.post('/', authMiddleware, categoryController.createCategory);
 
 /**
  * @swagger
@@ -87,7 +84,7 @@ router.post('/', categoryController.createCategory);
  *       404:
  *         description: Category not found
  */
-router.put('/:id', categoryController.updateCategory);
-router.delete('/:id', categoryController.deleteCategory);
+router.put('/:id', authMiddleware, categoryController.updateCategory);
+router.delete('/:id', authMiddleware, categoryController.deleteCategory);
 
 module.exports = router;
