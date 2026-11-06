@@ -3,7 +3,7 @@ const User = require('../models/user.model');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
-const protect = catchAsync(async (req, res, next) => {
+const authMiddleware = catchAsync(async (req, res, next) => {
   let token;
 
   if (
@@ -17,7 +17,6 @@ const protect = catchAsync(async (req, res, next) => {
     return next(new AppError('Anda belum login! Silakan login untuk mendapatkan akses.', 401));
   }
 
-  // Gunakan process.env.JWT_SECRET agar sinkron dengan proses login
   const secretKey = process.env.JWT_SECRET || 'rahasia_super_aman_gamelab';
   
   let decoded;
@@ -38,8 +37,5 @@ const protect = catchAsync(async (req, res, next) => {
   next();
 });
 
-// Ekspor sebagai objek agar cocok dengan semua pemanggilan "authMiddleware" di routes
-module.exports = {
-  authMiddleware: protect,
-  protect
-};
+// EKSPOR LANGSUNG SEBAGAI FUNGSI (Bukan Objek)
+module.exports = authMiddleware;
