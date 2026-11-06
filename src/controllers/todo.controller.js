@@ -6,27 +6,16 @@ const getTodos = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
 
-    const filter = { user: userId, archived: false };
-    if (req.query.search) {
-      filter.title = { $regex: req.query.search, $options: 'i' };
-    }
-    if (req.query.completed !== undefined) {
-      filter.completed = req.query.completed === 'true';
-    }
-    if (req.query.category) {
-      filter.category = req.query.category;
-    }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const todos = await todoService.getAllTodosFiltered(filter, skip, limit);
+    // Memanggil service getAllTodos dengan parameter userId dan req.query secara lengkap
+    const result = await todoService.getAllTodos(userId, req.query);
     
     res.status(200).json({
       status: 'success',
-      results: todos.length,
-      data: todos,
+      results: result.data.length,
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages,
     });
   } catch (error) {
     res.status(500).json({ status: 'fail', message: error.message });
@@ -47,7 +36,7 @@ const createTodo = async (req, res) => {
       created_by: userId,
     };
 
-    const todo = await todoService.createTodo(todoData);
+    const todo = await todoService.createTodo(todoData, userId);
 
     // --- PENCATATAN ACTIVITY LOG (SNAPSHOT) ---
     await ActivityLog.create({
@@ -91,7 +80,7 @@ const updateTodo = async (req, res) => {
       updated_by: userId,
     };
 
-    const todo = await todoService.updateTodo(req.params.id, updateData);
+    const todo = await todoService.updateTodo(req.params.id, updateData, userId);
     if (!todo) {
       return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
