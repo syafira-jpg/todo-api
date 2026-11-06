@@ -37,5 +37,5 @@ const authMiddleware = catchAsync(async (req, res, next) => {
   next();
 });
 
-// EKSPOR LANGSUNG SEBAGAI FUNGSI (Bukan Objek)
+// PASTIKAN EKSPORNYA SEPERTI INI (Fungsi Murni, Bukan Objek)
 module.exports = authMiddleware;
