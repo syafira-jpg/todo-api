@@ -75,7 +75,7 @@ app.get('/api-docs/swagger.json', (req, res) => {
   res.send(swaggerDocs);
 });
 
-// Halaman Swagger UI (Bebas error argument handler di Vercel & Tombol Authorize Muncul)
+// Halaman Swagger UI
 app.get('/api-docs', (req, res) => {
   const html = `
     <!DOCTYPE html>
