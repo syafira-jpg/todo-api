@@ -12,6 +12,20 @@ const categorySchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Kategori harus terhubung ke User'],
     },
+    created_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
+    updated_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

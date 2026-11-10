@@ -19,7 +19,7 @@ const app = express();
 // Connect Database
 connectDB();
 
-// Konfigurasi Swagger Spec
+// Konfigurasi Swagger Spec (Server lokal sudah dihapus)
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -32,10 +32,6 @@ const swaggerOptions = {
       {
         url: 'https://todo-api-seven-ashen.vercel.app',
         description: 'Server Vercel Production',
-      },
-      {
-        url: 'http://localhost:5000',
-        description: 'Server Lokal',
       },
     ],
     components: {
