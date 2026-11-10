@@ -51,9 +51,16 @@ const getAllTodos = async (userId, queryParams = {}) => {
   const sortOrder = order === 'asc' ? 1 : -1;
   sortOption[sortField] = sortOrder;
 
-  // Pagination
-  const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
+  // Pagination dengan Validasi Ketat (Tolak page <= 0 atau limit <= 0 dengan status 400)
+  const pageInt = parseInt(page, 10);
+  const limitInt = parseInt(limit, 10);
+
+  if ((page !== undefined && pageInt <= 0) || (limit !== undefined && limitInt <= 0)) {
+    throw new AppError('Parameter pagination (page dan limit) harus bernilai angka positif yang valid!', 400);
+  }
+
+  const pageNum = Math.max(1, pageInt || 1);
+  const limitNum = Math.min(100, Math.max(1, limitInt || 10));
   const skip = (pageNum - 1) * limitNum;
 
   const data = await Todo.find(query)
