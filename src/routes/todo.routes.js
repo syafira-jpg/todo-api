@@ -7,13 +7,50 @@ const authMiddleware = require('../middlewares/auth.middleware');
  * @swagger
  * /api/todos:
  *   get:
- *     summary: Get all todos for the logged-in user
+ *     summary: Get all todos for the logged-in user with filtering and pagination
  *     tags: [Todos]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search query for todo title
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: Sort field (e.g. -createdAt)
+ *       - in: query
+ *         name: completed
+ *         schema:
+ *           type: boolean
+ *         description: Filter by completion status
  *     responses:
  *       200:
  *         description: List of todos retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Todo'
  *       500:
  *         description: Server error
  *   post:
@@ -82,8 +119,12 @@ router.post('/', authMiddleware, todoController.createTodo);
  *             properties:
  *               title:
  *                 type: string
+ *               description:
+ *                 type: string
  *               completed:
  *                 type: boolean
+ *               category:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Todo updated successfully
