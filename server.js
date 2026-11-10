@@ -19,7 +19,7 @@ const app = express();
 // Connect Database
 connectDB();
 
-// Konfigurasi Swagger Spec (Server lokal sudah dihapus)
+// Konfigurasi Swagger Spec lengkap dengan components.schemas
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -41,6 +41,57 @@ const swaggerOptions = {
           scheme: 'bearer',
           bearerFormat: 'JWT',
           description: 'Masukkan token JWT kamu di sini (tanpa kata Bearer)',
+        },
+      },
+      schemas: {
+        Todo: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            title: { type: 'string' },
+            description: { type: 'string' },
+            completed: { type: 'boolean' },
+            user: { type: 'string' },
+            category: { type: 'string' },
+            created_by: { type: 'string' },
+            updated_by: { type: 'string' },
+            archived: { type: 'boolean' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        Category: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            name: { type: 'string' },
+            user: { type: 'string' },
+            created_by: { type: 'string' },
+            updated_by: { type: 'string' },
+            archived: { type: 'boolean' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        ActivityLog: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            user: { type: 'string' },
+            action: { type: 'string' },
+            description: { type: 'string' },
+            snapshot: { type: 'object' },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        User: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            name: { type: 'string' },
+            email: { type: 'string' },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
         },
       },
     },
