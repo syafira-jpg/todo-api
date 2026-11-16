@@ -1,12 +1,11 @@
 const todoService = require('../services/todo.service');
 const ActivityLog = require('../models/activityLog.model');
 
-// Controller untuk mengambil semua data (dengan Query Params yang bersih)
+// Controller untuk mengambil semua data (dengan Metadata Pagination lengkap)
 const getTodos = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
 
-    // Memanggil service getAllTodos dengan parameter userId dan req.query secara lengkap
     const result = await todoService.getAllTodos(userId, req.query);
     
     res.status(200).json({
@@ -15,14 +14,15 @@ const getTodos = async (req, res) => {
       data: result.data,
       total: result.total,
       page: result.page,
+      limit: result.limit,
       totalPages: result.totalPages,
     });
   } catch (error) {
-    res.status(500).json({ status: 'fail', message: error.message });
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ status: 'fail', message: error.message });
   }
 };
 
-// Controller untuk membuat data baru (Dengan Snapshot Activity Log)
 const createTodo = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id) : null;
@@ -38,7 +38,6 @@ const createTodo = async (req, res) => {
 
     const todo = await todoService.createTodo(todoData, userId);
 
-    // --- PENCATATAN ACTIVITY LOG (SNAPSHOT) ---
     await ActivityLog.create({
       user: userId,
       action: 'CREATE_TODO',
@@ -50,15 +49,14 @@ const createTodo = async (req, res) => {
         category: todo.category
       }
     });
-    // ----------------------------------------
 
     res.status(201).json({ status: 'success', data: todo });
   } catch (error) {
-    res.status(400).json({ status: 'fail', message: error.message });
+    const statusCode = error.statusCode || 400;
+    res.status(statusCode).json({ status: 'fail', message: error.message });
   }
 };
 
-// Controller untuk mengambil data berdasarkan ID
 const getTodoById = async (req, res) => {
   try {
     const todo = await todoService.getTodoById(req.params.id);
@@ -71,7 +69,6 @@ const getTodoById = async (req, res) => {
   }
 };
 
-// Controller untuk memperbarui data (Dengan Snapshot Activity Log)
 const updateTodo = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id) : null;
@@ -85,7 +82,6 @@ const updateTodo = async (req, res) => {
       return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
 
-    // --- PENCATATAN ACTIVITY LOG (SNAPSHOT) ---
     await ActivityLog.create({
       user: userId,
       action: 'UPDATE_TODO',
@@ -97,20 +93,17 @@ const updateTodo = async (req, res) => {
         category: todo.category
       }
     });
-    // ----------------------------------------
 
     res.status(200).json({ status: 'success', data: todo });
   } catch (error) {
-    res.status(400).json({ status: 'fail', message: error.message });
+    const statusCode = error.statusCode || 400;
+    res.status(statusCode).json({ status: 'fail', message: error.message });
   }
 };
 
-// Controller untuk menghapus data (Dengan Snapshot Activity Log)
 const deleteTodo = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id) : null;
-    
-    // Ambil data dulu untuk snapshot sebelum dihapus
     const todoBeforeDelete = await todoService.getTodoById(req.params.id);
 
     const todo = await todoService.deleteTodo(req.params.id);
@@ -118,7 +111,6 @@ const deleteTodo = async (req, res) => {
       return res.status(404).json({ status: 'fail', message: 'Todo tidak ditemukan' });
     }
 
-    // --- PENCATATAN ACTIVITY LOG (SNAPSHOT) ---
     await ActivityLog.create({
       user: userId,
       action: 'DELETE_TODO',
@@ -130,7 +122,6 @@ const deleteTodo = async (req, res) => {
         category: todoBeforeDelete.category
       } : { id: req.params.id }
     });
-    // ----------------------------------------
 
     res.status(200).json({ status: 'success', message: 'Todo berhasil dihapus' });
   } catch (error) {

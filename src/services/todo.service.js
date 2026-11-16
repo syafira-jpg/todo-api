@@ -19,9 +19,9 @@ const recordActivity = async (userId, action, description, snapshot = null) => {
   }
 };
 
-// Mengambil semua todo milik user dengan Filtering, Search, Sorting, & Pagination
+// Mengambil semua todo milik user dengan Filtering, Search, Sorting, & Pagination ketat
 const getAllTodos = async (userId, queryParams = {}) => {
-  const { search, completed, isCompleted, sortBy, order, page = 1, limit = 10 } = queryParams;
+  const { search, completed, isCompleted, sortBy, order, page, limit } = queryParams;
 
   // Filter berdasarkan user yang sedang login
   let query = { archived: false };
@@ -34,7 +34,7 @@ const getAllTodos = async (userId, queryParams = {}) => {
     query.title = { $regex: search, $options: 'i' };
   }
 
-  // Filter status selesai (memeriksa parameter completed atau isCompleted, diselaraskan ke field 'completed')
+  // Filter status selesai
   const statusFilter = completed !== undefined ? completed : isCompleted;
   if (statusFilter !== undefined) {
     query.completed = statusFilter === 'true' || statusFilter === true;
@@ -51,16 +51,30 @@ const getAllTodos = async (userId, queryParams = {}) => {
   const sortOrder = order === 'asc' ? 1 : -1;
   sortOption[sortField] = sortOrder;
 
-  // Pagination dengan Validasi Ketat (Tolak page <= 0 atau limit <= 0 dengan status 400)
-  const pageInt = parseInt(page, 10);
-  const limitInt = parseInt(limit, 10);
+  // --- VALIDASI KETAT PAGINATION & LIMIT ---
+  let pageNum = 1;
+  let limitNum = 10;
 
-  if ((page !== undefined && pageInt <= 0) || (limit !== undefined && limitInt <= 0)) {
-    throw new AppError('Parameter pagination (page dan limit) harus bernilai angka positif yang valid!', 400);
+  if (page !== undefined) {
+    if (isNaN(page) || Number.isNaN(Number(page))) {
+      throw new AppError('Parameter page harus berupa angka yang valid!', 400);
+    }
+    pageNum = parseInt(page, 10);
+    if (pageNum <= 0) {
+      throw new AppError('Parameter pagination (page) harus bernilai angka positif yang valid!', 400);
+    }
   }
 
-  const pageNum = Math.max(1, pageInt || 1);
-  const limitNum = Math.min(100, Math.max(1, limitInt || 10));
+  if (limit !== undefined) {
+    if (isNaN(limit) || Number.isNaN(Number(limit))) {
+      throw new AppError('Parameter limit harus berupa angka yang valid!', 400);
+    }
+    limitNum = parseInt(limit, 10);
+    if (limitNum <= 0 || limitNum > 100) {
+      throw new AppError('Parameter pagination (limit) harus bernilai antara 1 sampai 100!', 400);
+    }
+  }
+
   const skip = (pageNum - 1) * limitNum;
 
   const data = await Todo.find(query)
@@ -77,7 +91,7 @@ const getAllTodos = async (userId, queryParams = {}) => {
     total,
     page: pageNum,
     limit: limitNum,
-    totalPages: Math.ceil(total / limitNum),
+    totalPages: Math.ceil(total / limitNum) || 1,
   };
 };
 
@@ -88,7 +102,6 @@ const createTodo = async (data, userId) => {
     data.created_by = userId;
   }
 
-  // Validasi Category ID: pastikan kategori terdaftar di database
   if (data.category) {
     const categoryExists = await Category.findById(data.category);
     if (!categoryExists) {
@@ -98,7 +111,6 @@ const createTodo = async (data, userId) => {
 
   const newTodo = await Todo.create(data);
   
-  // Catat Activity Log dengan Snapshot
   await recordActivity(
     data.user || userId, 
     'CREATE_TODO', 
@@ -128,7 +140,6 @@ const updateTodo = async (id, data, userId = null) => {
     data.updated_by = userId;
   }
 
-  // Validasi Category ID jika dikirim saat update
   if (data.category) {
     const categoryExists = await Category.findById(data.category);
     if (!categoryExists) {
@@ -139,7 +150,6 @@ const updateTodo = async (id, data, userId = null) => {
   const updatedTodo = await Todo.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   
   if (updatedTodo) {
-    // Catat Activity Log dengan Snapshot
     await recordActivity(
       updatedTodo.user, 
       'UPDATE_TODO', 
@@ -159,13 +169,10 @@ const updateTodo = async (id, data, userId = null) => {
 
 // Menghapus todo berdasarkan ID + Catat Log
 const deleteTodo = async (id) => {
-  // Ambil data dulu untuk snapshot sebelum dihapus
   const todoBeforeDelete = await Todo.findById(id);
-
   const deletedTodo = await Todo.findByIdAndDelete(id);
   
   if (deletedTodo) {
-    // Catat Activity Log dengan Snapshot
     await recordActivity(
       deletedTodo.user, 
       'DELETE_TODO', 
