@@ -15,7 +15,7 @@ const getCategories = async (req, res) => {
   }
 };
 
-// Membuat kategori baru (menyertakan created_by)
+// Membuat kategori baru (menyertakan created_by & updated_by)
 const createCategory = async (req, res) => {
   try {
     const userId = req.user ? (req.user._id || req.user.id) : null;

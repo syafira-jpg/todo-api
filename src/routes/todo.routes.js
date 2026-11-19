@@ -47,6 +47,16 @@ const authMiddleware = require('../middlewares/auth.middleware');
  *               properties:
  *                 status:
  *                   type: string
+ *                 results:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
  *                 data:
  *                   type: array
  *                   items:
