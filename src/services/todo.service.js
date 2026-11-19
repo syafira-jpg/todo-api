@@ -110,17 +110,17 @@ const createTodo = async (data, userId) => {
   }
 
   const newTodo = await Todo.create(data);
-  
+
   await recordActivity(
-    data.user || userId, 
-    'CREATE_TODO', 
+    data.user || userId,
+    'CREATE_TODO',
     `Membuat todo baru: "${newTodo.title}"`,
     {
       id: newTodo._id,
       title: newTodo.title,
       description: newTodo.description,
       completed: newTodo.completed,
-      category: newTodo.category
+      category: newTodo.category,
     }
   );
 
@@ -148,18 +148,18 @@ const updateTodo = async (id, data, userId = null) => {
   }
 
   const updatedTodo = await Todo.findByIdAndUpdate(id, data, { new: true, runValidators: true });
-  
+
   if (updatedTodo) {
     await recordActivity(
-      updatedTodo.user, 
-      'UPDATE_TODO', 
+      updatedTodo.user,
+      'UPDATE_TODO',
       `Memperbarui todo: "${updatedTodo.title}"`,
       {
         id: updatedTodo._id,
         title: updatedTodo.title,
         description: updatedTodo.description,
         completed: updatedTodo.completed,
-        category: updatedTodo.category
+        category: updatedTodo.category,
       }
     );
   }
@@ -171,19 +171,19 @@ const updateTodo = async (id, data, userId = null) => {
 const deleteTodo = async (id) => {
   const todoBeforeDelete = await Todo.findById(id);
   const deletedTodo = await Todo.findByIdAndDelete(id);
-  
+
   if (deletedTodo) {
     await recordActivity(
-      deletedTodo.user, 
-      'DELETE_TODO', 
+      deletedTodo.user,
+      'DELETE_TODO',
       `Menghapus todo: "${deletedTodo.title}"`,
       todoBeforeDelete ? {
         id: todoBeforeDelete._id,
         title: todoBeforeDelete.title,
         description: todoBeforeDelete.description,
         completed: todoBeforeDelete.completed,
-        category: todoBeforeDelete.category
-      } : { id }
+        category: todoBeforeDelete.category,
+      } : { id },
     );
   }
 

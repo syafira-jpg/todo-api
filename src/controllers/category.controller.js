@@ -5,7 +5,7 @@ const getCategories = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
     const categories = await Category.find({ user: userId });
-    
+
     res.status(200).json({
       status: 'success',
       data: categories,
@@ -15,15 +15,21 @@ const getCategories = async (req, res) => {
   }
 };
 
-// Membuat kategori baru
+// Membuat kategori baru (menyertakan created_by)
 const createCategory = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user ? (req.user._id || req.user.id) : null;
+    if (!userId) {
+      return res.status(401).json({ status: 'fail', message: 'Unauthorized, user ID tidak ditemukan' });
+    }
+
     const { name } = req.body;
 
     const newCategory = await Category.create({
       name,
       user: userId,
+      created_by: userId,
+      updated_by: userId,
     });
 
     res.status(201).json({
@@ -35,15 +41,21 @@ const createCategory = async (req, res) => {
   }
 };
 
-// Memperbarui kategori berdasarkan ID
+// Memperbarui kategori berdasarkan ID (menyertakan updated_by)
 const updateCategory = async (req, res) => {
   try {
+    const userId = req.user ? (req.user._id || req.user.id) : null;
     const { id } = req.params;
     const { name } = req.body;
 
+    const updatePayload = { name };
+    if (userId) {
+      updatePayload.updated_by = userId;
+    }
+
     const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      { name },
+      updatePayload,
       { new: true, runValidators: true }
     );
 

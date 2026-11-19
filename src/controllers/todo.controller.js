@@ -4,10 +4,10 @@ const ActivityLog = require('../models/activityLog.model');
 // Controller untuk mengambil semua data (dengan Metadata Pagination lengkap)
 const getTodos = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user ? (req.user._id || req.user.id) : null;
 
     const result = await todoService.getAllTodos(userId, req.query);
-    
+
     res.status(200).json({
       status: 'success',
       results: result.data.length,
@@ -16,6 +16,12 @@ const getTodos = async (req, res) => {
       page: result.page,
       limit: result.limit,
       totalPages: result.totalPages,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+      },
     });
   } catch (error) {
     const statusCode = error.statusCode || 500;
@@ -46,8 +52,8 @@ const createTodo = async (req, res) => {
         title: todo.title,
         description: todo.description,
         completed: todo.completed,
-        category: todo.category
-      }
+        category: todo.category,
+      },
     });
 
     res.status(201).json({ status: 'success', data: todo });
@@ -90,8 +96,8 @@ const updateTodo = async (req, res) => {
         title: todo.title,
         description: todo.description,
         completed: todo.completed,
-        category: todo.category
-      }
+        category: todo.category,
+      },
     });
 
     res.status(200).json({ status: 'success', data: todo });
@@ -119,8 +125,8 @@ const deleteTodo = async (req, res) => {
         title: todoBeforeDelete.title,
         description: todoBeforeDelete.description,
         completed: todoBeforeDelete.completed,
-        category: todoBeforeDelete.category
-      } : { id: req.params.id }
+        category: todoBeforeDelete.category,
+      } : { id: req.params.id },
     });
 
     res.status(200).json({ status: 'success', message: 'Todo berhasil dihapus' });
